@@ -42,7 +42,34 @@ public class Player : NetworkBehaviour
     //Le client concerné appelle cette fonction
     [TargetRpc]
     void TargetHostGame(bool success, string matchID) {
-        Debug.Log("Match ID : " + matchID + "== " + MatchID);
+        Debug.Log("Match ID : " + matchID + " == " + MatchID);
         UILobby.instance.HostSuccess(success);
     }
+
+    public void JoinGame(string matchID) {
+        CmdJoinGame(matchID);
+    }
+
+    //Player dit au serveur d'exécuter cette fonction
+    //Le serveur va ajouter cet id à la liste des matchs existant
+    [Command] 
+    void CmdJoinGame(string matchID) {
+        MatchID = matchID;
+        if(MatchMaker.instance.JoinGame(matchID, gameObject)) {
+            Debug.Log("Game joined successfully !");
+            networkMatch.matchId = matchID.ToGuid();
+            TargetJoinGame(true, matchID);
+        }
+        else 
+            Debug.Log("Game joined failed");
+            TargetJoinGame(false, matchID);
+    }
+
+    //Le client concerné appelle cette fonction
+    [TargetRpc]
+    void TargetJoinGame(bool success, string matchID) {
+        Debug.Log("Match ID : " + matchID + " == " + MatchID);
+        UILobby.instance.JoinSuccess(success);
+    }
+
 }

@@ -45,11 +45,14 @@ public class UILobby : MonoBehaviour
         joinInput.interactable = false;
         joinButton.interactable = false;
         hostButton.interactable = false;
+
+        //Le matchID = ce que tape l'utilisateur dans l'input field
+        Player.localPlayer.JoinGame(joinInput.text);
     }
 
     public void JoinSuccess (bool success) {
         if (success) {
-
+            lobbyCanvas.enabled = true;
         }
         else {
             joinInput.interactable = true;

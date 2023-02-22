@@ -10,7 +10,6 @@ using System.Text;
 public class Match {
     public string matchID;
     public List<GameObject> players = new List<GameObject>();
-
     //Constructeur, playerHost est le joueur qui crée le nouveau match et on l'ajoute à la liste
     public Match(string matchID, GameObject playerHost) {
         this.matchID = matchID;
@@ -40,6 +39,7 @@ public class MatchMaker : NetworkBehaviour
 { 
     public static MatchMaker instance;
     public SyncListMatch matches = new SyncListMatch();
+    public SyncList<string> matchIDs = new SyncList<string>();
 
     void Start() {
       instance = this;
@@ -58,9 +58,33 @@ public class MatchMaker : NetworkBehaviour
 
     public bool HostGame(string matchID, GameObject player) {
         //On ajoute un nouveau match à la liste des matchs
-        //vérif que l'id n'existe pas déjà à faire
-        matches.Add(new Match(matchID, player));
-        return true;
+        //Si cet ID n'est pas déjà dans la liste
+        if (!matchIDs.Contains(matchID)) {
+                matchIDs.Add(matchID);
+                matches.Add(new Match(matchID, player));
+                Debug.Log("Match Generated");
+                return true; 
+        }
+        Debug.Log("Match ID already exists");
+        return false;
+    }
+
+    public bool JoinGame(string matchID, GameObject player) {
+        if (matchIDs.Contains(matchID)) {
+            Debug.Log("Match joined");
+
+            //On parcourt tous les match existant
+            for (int i  = 0; i < matches.Count; i++) {
+                //Quand on trouve notre match, on ajoute le joueur dedans et on break
+                if (matches[i].matchID == matchID) {
+                    matches[i].players.Add(player);
+                    break;
+                }
+            }
+            return true;
+        }
+        Debug.Log("Match ID does not exist");
+        return false;
         
     }
 
