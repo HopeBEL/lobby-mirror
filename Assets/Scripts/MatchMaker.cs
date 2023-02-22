@@ -41,6 +41,8 @@ public class MatchMaker : NetworkBehaviour
     public SyncListMatch matches = new SyncListMatch();
     public SyncList<string> matchIDs = new SyncList<string>();
 
+    [SerializeField] GameObject turnManagerPrefab;
+
     void Start() {
       instance = this;
     }
@@ -56,20 +58,27 @@ public class MatchMaker : NetworkBehaviour
         return id_string;
     }
 
-    public bool HostGame(string matchID, GameObject player) {
+
+    //out pe
+    public bool HostGame(string matchID, GameObject player, out int playerIndex) {
         //On ajoute un nouveau match à la liste des matchs
         //Si cet ID n'est pas déjà dans la liste
+
+        playerIndex = -1;
         if (!matchIDs.Contains(matchID)) {
                 matchIDs.Add(matchID);
                 matches.Add(new Match(matchID, player));
                 Debug.Log("Match Generated");
+                playerIndex = 1;
                 return true; 
         }
         Debug.Log("Match ID already exists");
         return false;
     }
 
-    public bool JoinGame(string matchID, GameObject player) {
+    //out permet de faire ref à une variable partout où cette fonction est appelée
+    public bool JoinGame(string matchID, GameObject player, out int playerIndex) {
+        playerIndex = -1;
         if (matchIDs.Contains(matchID)) {
             Debug.Log("Match joined");
 
@@ -78,6 +87,7 @@ public class MatchMaker : NetworkBehaviour
                 //Quand on trouve notre match, on ajoute le joueur dedans et on break
                 if (matches[i].matchID == matchID) {
                     matches[i].players.Add(player);
+                    playerIndex = matches[i].players.Count;
                     break;
                 }
             }
@@ -86,6 +96,28 @@ public class MatchMaker : NetworkBehaviour
         Debug.Log("Match ID does not exist");
         return false;
         
+    }
+
+    public void StartGame(string matchID) {
+        GameObject newTurnManager = Instantiate(turnManagerPrefab);
+        NetworkServer.Spawn(newTurnManager);
+        //Turnmanager will only apply to players who have the same matchId
+        newTurnManager.GetComponent<NetworkMatch>().matchId = matchID.ToGuid();
+        TurnManager turnManager = newTurnManager.GetComponent<TurnManager>();
+
+        for (int i = 0; i < matches.Count; i++) {
+            if (matches[i].matchID == matchID) {
+
+                foreach (var player in matches[i].players) {
+                    Player _player = player.GetComponent<Player>();
+                    //TurnManager aura la liste de tous ses joueurs
+                    turnManager.AddPlayer(_player);
+                    //Sur le serveur on dit à chacun de ses joueurs d'appeler
+                    _player.BeginGame();
+                }
+                break;
+            }
+        }
     }
 
 }
