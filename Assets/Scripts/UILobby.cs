@@ -8,9 +8,10 @@ public class UILobby : MonoBehaviour
 {
     public static UILobby instance;
 
+    //Header permet d'ajouter un header dans l'inspecteur, juste pour lisibilité
     [Header("Host Join")]
 
-    //Rendre variables private visibles dans l'inspecteur
+    //SerializeField = Rendre variables private visibles dans l'inspecteur
     [SerializeField] TMP_InputField joinInput;
     [SerializeField] Button joinButton;
     [SerializeField] Button hostButton;
